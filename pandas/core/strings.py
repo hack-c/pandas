@@ -27,15 +27,15 @@ def _get_array_list(arr, others):
     return [np.asarray(x, dtype=object) for x in arrays]
 
 
-def str_cat(arr, others=None, sep=None, na_rep=None):
+def str_cat(arr, sep=None, others=None, na_rep=None):
     """
     Concatenate strings in the Series/Index with given separator.
 
     Parameters
     ----------
+    sep : string or None, default None
     others : list-like, or list of list-likes
       If None, returns str concatenating strings of the Series
-    sep : string or None, default None
     na_rep : string or None, default None
         If None, an NA in any array will propagate
 
@@ -45,10 +45,25 @@ def str_cat(arr, others=None, sep=None, na_rep=None):
 
     Examples
     --------
+    If one argument is given and no keyword args, the lone argument is
+    understood as the ``sep`` character(s).
+
+    >>> Series(['a', 'b', 'c']).str.cat('|')
+    'a|b|c'
+
+    When ``na_rep`` is `None` (default behavior), NaN value(s)
+    in the Series propagate and return value will be NaN.
+
+    >>> Series(['a','b',np.nan,'c']).str.cat(' ')
+    nan
+
+    >>> Series(['a','b',np.nan,'c']).str.cat(' ', na_rep='?')
+    'a b ? c'
+
     If ``others`` is specified, corresponding values are
     concatenated with the separator. Result will be a Series of strings.
 
-    >>> Series(['a', 'b', 'c']).str.cat(['A', 'B', 'C'], sep=',')
+    >>> Series(['a', 'b', 'c']).str.cat(',', others=['A', 'B', 'C'])
     0    a,A
     1    b,B
     2    c,C
@@ -56,12 +71,12 @@ def str_cat(arr, others=None, sep=None, na_rep=None):
 
     Otherwise, strings in the Series are concatenated. Result will be a string.
 
-    >>> Series(['a', 'b', 'c']).str.cat(sep=',')
+    >>> Series(['a', 'b', 'c']).str.cat(',')
     'a,b,c'
 
     Also, you can pass a list of list-likes.
 
-    >>> Series(['a', 'b']).str.cat([['x', 'y'], ['1', '2']], sep=',')
+    >>> Series(['a', 'b']).str.cat(others=[['x', 'y'], ['1', '2']], sep=',')
     0    a,x,1
     1    b,y,2
     dtype: object
@@ -1156,7 +1171,7 @@ class StringMethods(NoNewAttributesMixin):
                 return cons(result, name=name, index=index)
 
     @copy(str_cat)
-    def cat(self, others=None, sep=None, na_rep=None):
+    def cat(self, sep=None, others=None, na_rep=None):
         data = self._orig if self._is_categorical else self._data
         result = str_cat(data, others=others, sep=sep, na_rep=na_rep)
         return self._wrap_result(result, use_codes=(not self._is_categorical))
